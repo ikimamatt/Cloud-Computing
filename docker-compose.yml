@@ -1,0 +1,50 @@
+version: '3.7'
+services:
+  backend:
+    build:
+      context: ./backend
+    container_name: flask_container
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+    environment:
+      - DB_HOST=db
+      - DB_NAME=db_test
+      - DB_USER=mamat
+      - DB_PASSWORD=123
+    networks:
+      - app-network  # Menyambungkan backend ke jaringan khusus
+
+  frontend:
+    build:
+      context: ./frontend/my-react-app
+    container_name: react_container
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend  # Pastikan backend sudah siap sebelum frontend dijalankan
+    networks:
+      - app-network  # Menyambungkan frontend ke jaringan khusus
+
+  db:
+    image: postgres:12-alpine
+    container_name: postgres_container
+    environment:
+      - POSTGRES_DB=db_test
+      - POSTGRES_USER=mamat
+      - POSTGRES_PASSWORD=123
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - app-network  # Menyambungkan database ke jaringan khusus
+
+networks:
+  app-network:  # Buat jaringan khusus untuk komunikasi antar container
+    driver: bridge
+
+volumes:
+  db_data:
